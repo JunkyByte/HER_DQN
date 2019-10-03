@@ -8,7 +8,7 @@ device = torch.device('cpu')  # TODO: Test / Add Cuda
 
 
 class DQN:
-    def __init__(self, state_dim, action_dim, gamma, hidd_ch, lr, eps, bs, target_interval, max_memory):
+    def __init__(self, state_dim, action_dim, gamma, hidd_ch, lr, eps, bs, target_interval, max_memory, her=None):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -22,6 +22,7 @@ class DQN:
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=self.lr)  # Only policy
         self.target.update_target(self.policy)
         self.target_count = 0
+        self.her = her
 
     def act(self, obs, deterministic=False):
         x = torch.from_numpy(obs).float().to(device)
@@ -29,12 +30,16 @@ class DQN:
         return action
 
     def update(self):
-        idx = np.random.randint(len(self.memory.state), size=self.bs)
-        state = torch.tensor([self.memory.state[i] for i in idx], dtype=torch.float).detach().to(device)
-        new_state = torch.tensor([self.memory.new_state[i] for i in idx], dtype=torch.float).detach().to(device)
-        action = torch.tensor([self.memory.action[i] for i in idx]).detach().to(device)
-        reward = torch.tensor([self.memory.reward[i] for i in idx], dtype=torch.float).detach().to(device)
-        is_terminal = torch.tensor([1 - int(self.memory.is_terminal[i]) for i in idx], dtype=torch.float).detach().to(device)
+        if len(self.memory.state) < self.bs:
+            return None
+
+        state, new_state, action, reward, is_terminal = self.memory.sample(self.bs, self.her)
+
+        state = torch.tensor(state, dtype=torch.float).detach().to(device)
+        new_state = torch.tensor(new_state, dtype=torch.float).detach().to(device)
+        action = torch.tensor(action).detach().to(device)
+        reward = torch.tensor(reward, dtype=torch.float).detach().to(device)
+        is_terminal = torch.tensor(is_terminal, dtype=torch.float).detach().to(device)
 
         q = self.policy(state)[torch.arange(self.bs), action]
         max_action = torch.argmax(self.policy(new_state), dim=1)
@@ -49,5 +54,7 @@ class DQN:
         if self.target_count == self.target_interval:  # Sync the two
             self.target_count = 0
             self.target.update_target(self.policy)
+
+        return loss
 
         

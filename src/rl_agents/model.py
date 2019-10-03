@@ -10,20 +10,20 @@ class DDQN_Model(nn.Module):
 
         self.features = nn.Sequential(
             nn.Linear(state_size, hidd_ch),
-            nn.Tanh(),
-            nn.Linear(hidd_ch, hidd_ch),
-            nn.Tanh()
+            nn.ReLU(),
+            #nn.Linear(hidd_ch, hidd_ch),
+            #nn.ReLU()
         )
 
         self.advantage = nn.Sequential(
-            nn.Linear(hidd_ch, hidd_ch),
-            nn.Tanh(),
+            #nn.Linear(hidd_ch, hidd_ch),
+            #nn.ReLU(),
             nn.Linear(hidd_ch, self.action_size)
         )
 
         self.value = nn.Sequential(
-            nn.Linear(hidd_ch, hidd_ch),
-            nn.Tanh(),
+            #nn.Linear(hidd_ch, hidd_ch),
+            #nn.ReLU(),
             nn.Linear(hidd_ch, 1)
         )
 

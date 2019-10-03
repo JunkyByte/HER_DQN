@@ -10,12 +10,15 @@ logger = logging.getLogger(__name__)
 class BitSwapEnvironment(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, n, explicit_goal):
+    def __init__(self, n, explicit_goal, fixed_goal):
         super(BitSwapEnvironment, self).__init__()
         self.n = n
         self.explicit_goal = explicit_goal
+        self.fixed_goal = fixed_goal
         self.action_space = spaces.Discrete(self.n)
         self.observation_space = spaces.MultiBinary(self.n)
+        self.max_episode_steps = n
+        self.steps = 0
         self.state = None
         self.goal = np.random.randint(2, size=self.n)
         self.seed = self._seed()
@@ -31,7 +34,10 @@ class BitSwapEnvironment(gym.Env):
         self.state[action] = not self.state[action]
         obs = self._get_obs()
         reward = self._calc_reward()
-        terminal = True if reward == 1 else 0
+        terminal = True if reward == 1 else False
+        self.steps += 1
+        if self.steps == self.max_episode_steps:
+            terminal = True
         return obs, reward, terminal, None
 
 
@@ -48,8 +54,9 @@ class BitSwapEnvironment(gym.Env):
 
 
     def reset(self):
+        self.steps = 0
         self.state = np.random.randint(2, size=self.n)
-        if self.explicit_goal:
+        if not self.fixed_goal:
             self.goal = np.random.randint(2, size=self.n)
         return self._get_obs()
 
