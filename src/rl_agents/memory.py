@@ -1,22 +1,33 @@
 import numpy as np
 
 class Memory:
-    def __init__(self, max_memory):
+    def __init__(self, max_memory, max_proc):
         self.max_memory = max_memory
+        self.max_proc = max_proc
         self.state = []
         self.new_state = []
         self.action = []
         self.reward = []
         self.is_terminal = []
         self.indexer = [0]
+        self._tempbuffer = [[] for _ in range(self.max_proc)]
 
-    def store_transition(self, s, s1, a, r, is_terminal):
-        self.state.append(s)
-        self.new_state.append(s1)
-        self.action.append(a)
-        self.reward.append(r)
-        self.is_terminal.append(is_terminal)
-        self.indexer.append(int(not is_terminal))
+    def store_transition(self, s, s1, a, r, is_terminal, store):
+        for i in range(len(s)):
+            if store[i]:
+                self._tempbuffer[i].append([s[i], s1[i], a[i], r[i], is_terminal[i]])
+                if is_terminal[i]:
+                    ep = np.array(self._tempbuffer[i]).T
+                    self._store_episode(ep[0], ep[1], ep[2], ep[3], ep[4])
+                    del self._tempbuffer[i][:]
+
+    def _store_episode(self, s, s1, a, r, is_terminal):
+        self.state.extend(s)
+        self.new_state.extend(s1)
+        self.action.extend(a)
+        self.reward.extend(r)
+        self.is_terminal.extend(is_terminal)
+        self.indexer.extend(map(lambda x: int(not x), is_terminal))
         assert len(self.state) == len(self.new_state) == len(self.reward) == len(self.is_terminal) == len(self.action) == len(self.indexer) - 1
 
         if len(self.state) > self.max_memory:

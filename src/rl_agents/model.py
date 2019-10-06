@@ -36,9 +36,9 @@ class DDQN_Model(nn.Module):
     def act(self, state, eps):
         if np.random.random() > eps:
             q = self.forward(state)
-            action = torch.argmax(q).item()
+            action = torch.argmax(q, dim=-1).cpu().data.numpy()
         else:
-            action = np.random.randint(self.action_size)
+            action = np.random.randint(self.action_size, size=1 if len(state.shape) == 1 else state.shape[0])
         return action
 
     def update_target(self, model):

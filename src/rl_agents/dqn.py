@@ -3,12 +3,11 @@ import torch
 from src.rl_agents.model import DDQN_Model
 from src.rl_agents.memory import Memory
 from torch.nn.functional import mse_loss
-
-device = torch.device('cpu')  # TODO: Test / Add Cuda
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # TODO: Test / Add Cuda
 
 
 class DQN:
-    def __init__(self, state_dim, action_dim, gamma, hidd_ch, lr, eps, bs, target_interval, max_memory, her=None):
+    def __init__(self, state_dim, action_dim, gamma, hidd_ch, lr, eps, bs, target_interval, nproc, max_memory, her=None):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.gamma = gamma
@@ -16,7 +15,8 @@ class DQN:
         self.eps = eps
         self.bs = bs
         self.target_interval = target_interval
-        self.memory = Memory(max_memory)
+        self.nproc = nproc
+        self.memory = Memory(max_memory, nproc)
         self.policy = DDQN_Model(state_dim, action_dim, hidd_ch).to(device)
         self.target = DDQN_Model(state_dim, action_dim, hidd_ch).to(device)
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=self.lr)  # Only policy

@@ -25,7 +25,7 @@ class BitSwapEnvironment(gym.Env):
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
-        return [seed]
+        return seed
 
     def _calc_reward(self):
         return int(all(self.state == self.goal))
