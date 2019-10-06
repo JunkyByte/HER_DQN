@@ -3,7 +3,8 @@ import torch
 from src.rl_agents.model import DDQN_Model
 from src.rl_agents.memory import Memory
 from torch.nn.functional import mse_loss
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # TODO: Test / Add Cuda
+#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # TODO: Test / Add Cuda
+device = torch.device('cuda')
 
 
 class DQN:
@@ -30,8 +31,8 @@ class DQN:
         return action
 
     def update(self):
-        if len(self.memory.state) < self.bs:
-            return None
+        if len(self.memory.state) < self.bs // 4:
+            return 0
 
         state, new_state, action, reward, is_terminal = self.memory.sample(self.bs, self.her)
 

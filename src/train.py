@@ -44,6 +44,7 @@ def make_env(env_id, seed, **kwargs):
 
 if __name__ == '__main__':
     args = parser.parse_args()
+    assert args.replay_k < args.bs
 
     # Setup env
     if args.env == 'BitSwap-v0':
@@ -110,8 +111,11 @@ if __name__ == '__main__':
             train_steps += 1
             if train_steps % args.train_interval == 0 and train_steps > 0:
                 train_steps = 0
-                for i in range(args.train_steps):
-                    dqn.update()
+                tot_loss = 0
+                for _ in range(args.train_steps):
+                    tot_loss += dqn.update()
+                tot_loss /= args.train_steps
+                log.TB_LOGGER.log_scalar(tag='Loss', value=tot_loss)
 
             obs = obs_new
             last_terminal += is_terminal
@@ -122,7 +126,7 @@ if __name__ == '__main__':
         if i % episodes_per_epoch == 0 and i > 0:
             log.TB_LOGGER.log_scalar(tag='Train Success', value=tot_succ / episodes_per_epoch / args.nproc)
 
-        if i % (500 // args.nproc) == 0:
+        if i % (1000 // args.nproc) == 0:
             n_eval_episodes = 200
             tot_reward = 0
             for i in range(n_eval_episodes):
