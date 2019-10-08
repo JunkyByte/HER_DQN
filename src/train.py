@@ -125,6 +125,7 @@ if __name__ == '__main__':
         episodes_per_epoch = 100
         if i % episodes_per_epoch == 0 and i > 0:
             log.TB_LOGGER.log_scalar(tag='Train Success', value=tot_succ / episodes_per_epoch / args.nproc)
+            tot_succ = 0
 
         if i % (1000 // args.nproc) == 0:
             n_eval_episodes = 200
